@@ -1,0 +1,12 @@
+top.x
+top.y
+right_ear.x
+right_ear.y
+right_eye.x
+right_eye.y
+nose.x
+nose.y
+left_ear.x
+left_ear.y
+left_eye.x
+left_eye.y

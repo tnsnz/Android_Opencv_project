@@ -31,6 +31,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -50,6 +51,9 @@ public class MainActivity extends AppCompatActivity
 
     private Handler mainHandler;
 
+    Mat glasses;
+
+    Mat mustache;
 
     private static final String TAG = "opencv";
     private Mat matInput;
@@ -62,15 +66,11 @@ public class MainActivity extends AppCompatActivity
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
-
-
     static {
+        System.loadLibrary("dlib");
         System.loadLibrary("opencv_java4");
         System.loadLibrary("native-lib");
     }
-
-
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -92,6 +92,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        glasses = Draw.readImage(MainActivity.this, "glasses");
+        mustache = Draw.readImage(MainActivity.this, "mustache01");
 
 //        Intent intent = new Intent(MainActivity.this,
 //                LoadingActivity.class);
@@ -195,16 +199,23 @@ public class MainActivity extends AppCompatActivity
         Log.d("tModelSize",Integer.toString(tfModelSize));
         if (tfModelSize < 2)
             return null;
-        matInput = inputFrame.rgba();
+        Mat matInputFrame = inputFrame.rgba();
+
+        if (matInput == null) matInput = new Mat();
+        Core.rotate(matInputFrame, matInput, Core.ROTATE_90_CLOCKWISE);
+        Log.d(TAG, "onCameraFramematinput: " + matInput.width() + matInput.height());
+
         if ( matResult == null )
-            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+            matResult = new Mat();
+
         matToBitmap(matInput);
 
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
-        dog.oriBitmap = Bitmap.createBitmap(dog.oriBitmap,
-                0, 0, dog.oriBitmap.getWidth(),dog.oriBitmap.getHeight(),
-                matrix, true);
+        matToBitmap(matInput);
+//        dog.oriBitmap = Bitmap.createBitmap(dog.oriBitmap,
+//                0, 0, dog.oriBitmap.getWidth(),dog.oriBitmap.getHeight(),
+//                matrix, true);
 
         dog.resizedBoxBitmap = Bitmap.createScaledBitmap(dog.oriBitmap,
                 Math.round((float)dog.oriBitmap.getWidth()*dog.BOXRATIO),
@@ -235,17 +246,27 @@ public class MainActivity extends AppCompatActivity
         drawBox(dog.oriBitmap,dog.ori_bb,Color.RED);
         drawDots(dog.oriBitmap,dog.ori_lmks,Color.RED);
 
-        matrix.postRotate(180);
-        dog.oriBitmap = Bitmap.createBitmap(dog.oriBitmap,
-                0, 0, dog.oriBitmap.getWidth(),dog.oriBitmap.getHeight(),
-                matrix, true);
+//        matrix.postRotate(180);
+//        dog.oriBitmap = Bitmap.createBitmap(dog.oriBitmap,
+//                0, 0, dog.oriBitmap.getWidth(),dog.oriBitmap.getHeight(),
+//                matrix, true);
 
 
-        Utils.bitmapToMat(dog.oriBitmap,matInput);
+        Utils.bitmapToMat(dog.oriBitmap, matInput);
+        Core.rotate(matInput, matInput, Core.ROTATE_90_COUNTERCLOCKWISE);
 
-        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+//        Draw.fittingGlasses(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
+//                glasses.getNativeObjAddr(), dog.ori_lmks[4], dog.ori_lmks[5],
+//                dog.ori_lmks[10], dog.ori_lmks[11]);
 
+        Draw.fittingMustache(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
+                mustache.getNativeObjAddr(), 1080 - dog.ori_lmks[4], 1920 - dog.ori_lmks[5],
+                1080 - dog.ori_lmks[10], 1920 - dog.ori_lmks[11],
+                1080 - dog.ori_lmks[6], 1920 - dog.ori_lmks[7]);
 
+        Log.d(TAG, "onCameraFrame: " + matResult.width() + matResult.height());
+
+//        Core.rotate(matResult, matResult, Core.ROTATE_90_CLOCKWISE);
         return matResult;
     }
 

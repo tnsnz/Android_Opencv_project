@@ -55,7 +55,9 @@ public class Dog {
         newBox[0] = Math.round(centerX - (faceSize * 0.6f));
         newBox[1] = Math.round(centerY - (faceSize * 0.6f));
         newBox[2] = Math.round(centerX + (faceSize * 0.6f));
+        newBox[2] = newBox[2] > oriBitmap.getWidth() ? oriBitmap.getWidth() - 1 : newBox[2];
         newBox[3] = Math.round(centerY + (faceSize * 0.6f));
+        newBox[3] = newBox[3] > oriBitmap.getHeight() ? oriBitmap.getHeight() - 1 : newBox[3];
         for(int i = 0 ; i < 4 ; i++){
 //            if(i%2==0)
 //                newBox[i] = Math.round(centerX - (faceSize * 0.6f));
@@ -95,26 +97,25 @@ public class Dog {
         int delta_width = 224 - resizedLandmarkBitmap.getWidth();
         int delta_height = 224 - resizedLandmarkBitmap.getHeight();
 
-//        Log.d("resizeLM WIDTH",Integer.toString(resizedLandmarkBitmap.getWidth()));
-//        Log.d("resizeLM Height",Integer.toString(resizedLandmarkBitmap.getHeight()));
         lmksTop = delta_height/2;
         lmksBottom = delta_height - lmksTop;
         lmksLeft = delta_width/2;
         lmksRight = delta_width - lmksLeft;
-//        Log.d("LM TOP : ",Integer.toString(lmksTop));
-//        Log.d("LM Left : ",Integer.toString(lmksLeft));
         newLandmarkBitmap = copyResizeBitmap(resizedLandmarkBitmap,lmksTop,lmksLeft);
     }
 
     public void createOriBox(){
         for(int i = 0 ; i < ori_bb.length ; i++) {
-            if(i%2==0)
+            if(i%2==0) {
                 ori_bb[i] = Math.round((pred_bb[i]
                         - boxLeft) / BOXRATIO);
-            else
+                ori_bb[i] = ori_bb[i] < oriBitmap.getWidth() ? ori_bb[i] : oriBitmap.getWidth() - 1;
+            }
+            else {
                 ori_bb[i] = Math.round((pred_bb[i]
                         - boxTop) / BOXRATIO);
-
+                ori_bb[i] = ori_bb[i] < oriBitmap.getHeight() ? ori_bb[i] : oriBitmap.getHeight() - 1;
+            }
             if(ori_bb[i]<=0) ori_bb[i]=1;
             Log.d("ori_bb",i + " : " + ori_bb[i]);
         }

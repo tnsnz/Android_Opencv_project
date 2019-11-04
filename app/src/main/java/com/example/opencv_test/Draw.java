@@ -55,11 +55,7 @@ public class Draw {
         Log.d(TAG, "x: " + x + " y: " + y +
                 " w: " + w + " h: " + h);
 
-        // b g r a
-        List<Mat> mask = new ArrayList<>();
-        Core.split(imgToOverlay, mask);
 
-        Imgproc.medianBlur(mask.get(3), mask.get(3), 5);
 
         int dtop = y-h/2 >=0 ? y-h/2 : 0;
         int dbottom = y+h/2 <= height ? y+h/2 : height;
@@ -67,24 +63,27 @@ public class Draw {
         int dright = x+w/2 <= width ? x+w/2 : width;
 
 
-//        Mat roi = bgImg.rowRange(dtop, dbottom)
-//                .colRange(dleft, dright);
         Mat roi = bgImg.rowRange(dtop, dbottom)
                 .colRange(dleft, dright);
 
-        Mat tmp = new Mat();
-        Mat img1Bg = new Mat();
-        Mat img2Fg = new Mat();
-        Mat maskNot = new Mat();
+        // b g r a
+//        List<Mat> mask = new ArrayList<>();
+//        Core.split(imgToOverlay, mask);
+//
+//        Imgproc.medianBlur(mask.get(3), mask.get(3), 5);
+//
+//        Mat tmp = new Mat();
+//        Mat img1Bg = new Mat();
+//        Mat img2Fg = new Mat();
+//        Mat maskNot = new Mat();
 //        Core.bitwise_not(mask.get(3), maskNot);
 //
-//        tmp.copyTo(roi);
+//        roi.copyTo(tmp);
 //
 //        Core.bitwise_and(tmp, tmp, img1Bg, maskNot);
 //        Core.bitwise_and(imgToOverlay, imgToOverlay, mask.get(3), img2Fg);
 //
 //        Core.add(img1Bg, img2Fg, roi);
-
 
         Core.add(roi, imgToOverlay, roi);
 
@@ -109,7 +108,7 @@ public class Draw {
 
         Mat result = new Mat();
 
-        Core.rotate(ImageMat, result, Core.ROTATE_90_COUNTERCLOCKWISE);
+        Core.rotate(ImageMat, result, Core.ROTATE_180);
 
         return result;
     }

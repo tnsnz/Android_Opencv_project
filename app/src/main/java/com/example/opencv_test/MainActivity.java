@@ -59,6 +59,9 @@ public class MainActivity extends AppCompatActivity
     private Mat matInput;
     private Mat matResult;
 
+    private static int WIDTH = 1080;
+    private static int HEIGHT = 1920;
+
     private TFModelHandler tfModelHandler;
     private Dog dog = new Dog();
 
@@ -107,14 +110,14 @@ public class MainActivity extends AppCompatActivity
 
         tfModelHandler = new TFModelHandler(getAssets(), this);
 
-        tfModelHandler.addModel("tflite/bbs_dog.tflite",
+        tfModelHandler.addModel("tflite/bbs_1104.tflite",
                 "tflite/labels_bbs.txt",
                 224,
                 false,
                 "dog bbs",
                 "find dog face");
 
-        tfModelHandler.addModel("tflite/lmks_dog.tflite",
+        tfModelHandler.addModel("tflite/lmks_1104.tflite",
                 "tflite/labels_lmks.txt",
                 224,
                 false,
@@ -203,7 +206,6 @@ public class MainActivity extends AppCompatActivity
 
         if (matInput == null) matInput = new Mat();
         Core.rotate(matInputFrame, matInput, Core.ROTATE_90_CLOCKWISE);
-        Log.d(TAG, "onCameraFramematinput: " + matInput.width() + matInput.height());
 
         if ( matResult == null )
             matResult = new Mat();
@@ -233,7 +235,12 @@ public class MainActivity extends AppCompatActivity
 //
         dog.createOriBox();
         dog.createNewBox();
+
+        if(dog.newBox[2]-dog.newBox[0] >= 1080 || dog.newBox[3]-dog.newBox[1] >= 1920) return matInput;
+
         dog.newLandmarkBox();
+
+        Log.d(TAG, "oribitmap: " + dog.oriBitmap.getWidth() + dog.oriBitmap.getHeight());
 
         dog.pred_lmks = TFModelHandler.roundsValue(
                 tfModelHandler.runModelForRegression(
@@ -255,18 +262,26 @@ public class MainActivity extends AppCompatActivity
         Utils.bitmapToMat(dog.oriBitmap, matInput);
         Core.rotate(matInput, matInput, Core.ROTATE_90_COUNTERCLOCKWISE);
 
-//        Draw.fittingGlasses(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
-//                glasses.getNativeObjAddr(), dog.ori_lmks[4], dog.ori_lmks[5],
-//                dog.ori_lmks[10], dog.ori_lmks[11]);
 
-        Draw.fittingMustache(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
-                mustache.getNativeObjAddr(), 1080 - dog.ori_lmks[4], 1920 - dog.ori_lmks[5],
-                1080 - dog.ori_lmks[10], 1920 - dog.ori_lmks[11],
-                1080 - dog.ori_lmks[6], 1920 - dog.ori_lmks[7]);
+        Draw.fittingGlasses(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
+                glasses.getNativeObjAddr(), WIDTH - dog.ori_lmks[10], dog.ori_lmks[11],
+                WIDTH - dog.ori_lmks[4], dog.ori_lmks[5]);
 
-        Log.d(TAG, "onCameraFrame: " + matResult.width() + matResult.height());
+        Log.d(TAG, "left eye: (" + (WIDTH - dog.ori_lmks[10]) + dog.ori_lmks[11] + ") right eye: (" +
+                (WIDTH - dog.ori_lmks[4]) + dog.ori_lmks[5] +") ");
 
-//        Core.rotate(matResult, matResult, Core.ROTATE_90_CLOCKWISE);
+//        Draw.fittingMustache(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(),
+//                mustache.getNativeObjAddr(), 1080 - dog.ori_lmks[4], 1920 - dog.ori_lmks[5],
+//                1080 - dog.ori_lmks[10], 1920 - dog.ori_lmks[11],
+//                1080 - dog.ori_lmks[6], 1920 - dog.ori_lmks[7]);
+
+
+//        int centerX = WIDTH - (dog.ori_lmks[4] + dog.ori_lmks[10]) / 2;
+//        int centerY = (dog.ori_lmks[5] + dog.ori_lmks[11]) / 2;
+//
+//        matResult = Draw.overlayTransparentByMatrix(matInput, glasses,
+//                centerX, centerY, 0, 0);
+
         return matResult;
     }
 
@@ -350,13 +365,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void drawBox(Bitmap bitmap, int[] bbs, int color) {
-        Log.d("OriBitmapWidth()",Integer.toString(dog.oriBitmap.getWidth()));
-        Log.d("OriBitmapHeight()",Integer.toString(dog.oriBitmap.getHeight()));
-
-        Log.d("bbs[0]", Integer.toString(bbs[0]));
-        Log.d("bbs[1]", Integer.toString(bbs[1]));
-        Log.d("bbs[2]", Integer.toString(bbs[2]));
-        Log.d("bbs[3]", Integer.toString(bbs[3]));
 
         for(int i=bbs[0];i<bbs[2];i++) {
             bitmap.setPixel(i,bbs[1], color);
